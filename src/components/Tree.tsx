@@ -14,9 +14,9 @@ export interface ITreeProps {
   //   listItemContainerProps: ;
   //   collapsibleProps: ;
   expandedNodesKeys: string[];
-  //   loadingNodesKeys: ;
+  loadingNodesKeys: string[];
   //   onAsyncNodeClick: ;
-  onExpand: (expandedNodesKey: string) => void;
+  onExpand: (expandedNode: TreeNode) => void;
   onItemClick: (item: TreeNode) => void;
   renderTreeListItem: (item: TreeNode, path: string[]) => any;
 }
@@ -26,6 +26,7 @@ const Tree = ({
   hierarchyIndex = 0,
   path = [],
   expandedNodesKeys,
+  loadingNodesKeys,
   onExpand,
   onItemClick,
   renderTreeListItem,
@@ -34,6 +35,7 @@ const Tree = ({
     <List>
       {data.map((item: TreeNode, index: number) => {
         const isExpanded = expandedNodesKeys.includes(item.key);
+        const isLoading = loadingNodesKeys.includes(item.key);
 
         return (
           <React.Fragment key={item.key}>
@@ -43,6 +45,7 @@ const Tree = ({
               hierarchyIndex={hierarchyIndex}
               isExpanded={isExpanded}
               onExpand={onExpand}
+              isLoading={isLoading}
               onItemClick={onItemClick}
               renderTreeListItem={renderTreeListItem}
             />
@@ -54,6 +57,7 @@ const Tree = ({
                   path={path.concat(`${index}`)}
                   renderTreeListItem={renderTreeListItem}
                   expandedNodesKeys={expandedNodesKeys}
+                  loadingNodesKeys={loadingNodesKeys}
                   onExpand={onExpand}
                   onItemClick={onItemClick}
                 />

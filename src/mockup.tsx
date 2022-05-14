@@ -19,6 +19,7 @@ export const data = [
     label: "Avocado",
     key: "0",
     type: "folder",
+    children: null,
   },
   {
     label: "Banana",
@@ -40,14 +41,14 @@ export const data = [
                 key: "1-0-0-0",
                 type: "doc",
               },
-            ]
+            ],
           },
           {
             label: "Green Banana",
             key: "1-0-1",
             type: "doc",
           },
-        ]
+        ],
       },
       {
         label: "Green Banana",

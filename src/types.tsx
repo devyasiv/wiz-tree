@@ -7,5 +7,5 @@ export interface TreeNode {
   label: string;
   key: string;
   type: keyof IColors;
-  children: TreeNode[];
+  children?: TreeNode[] | null;
 }
