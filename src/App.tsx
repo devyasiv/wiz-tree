@@ -1,16 +1,18 @@
-import React, { useState } from "react";
 import styled from "styled-components";
+import React, { useEffect, useState } from "react";
 
+import Box from "@mui/material/Box";
 import Tree from "./components/Tree";
 import Avatar from "@mui/material/Avatar";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import { TreeNode, IColors } from "./types";
-import { data, colors, icons } from "./mockup";
+import { colors, icons, getChildren } from "./mockup";
+
 import "./App.css";
 
-const isNull = (o: any) => o === null;
 const isUndefined = (o: any) => typeof o === "undefined";
 
 const StyledApp = styled.div`
@@ -21,12 +23,20 @@ const StyledApp = styled.div`
   justify-content: center;
 `;
 
-const StyledDiv = styled.div`
+const StyledTreeContainer = styled.div`
   min-height: 400px;
   max-height: 80vh;
   width: 500px;
   border: 1px solid black;
   overflow: auto;
+`;
+
+const StyledSpinnerBoxContainer = styled.div`
+  width: 100%;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const StyledListItem = styled.div`
@@ -43,13 +53,13 @@ const StyledAvatar = styled(Avatar)<{ type: keyof IColors }>`
 const updateTreeData = (
   currentData: TreeNode[],
   keyToChange: string,
-  newChildren: TreeNode[]
+  updateObj: { hasChildren?: boolean; children?: TreeNode[] }
 ): TreeNode[] => {
   return currentData.map((item: TreeNode) => {
     if (item.key === keyToChange) {
       return {
         ...item,
-        children: newChildren,
+        ...updateObj,
       };
     }
 
@@ -60,46 +70,54 @@ const updateTreeData = (
       children: updateTreeData(
         item.children as TreeNode[],
         keyToChange,
-        newChildren
+        updateObj
       ),
     };
   });
 };
 
 function App() {
-  const [treeData, setTreeData] = useState<TreeNode[]>(data as TreeNode[]);
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [expandedNodesKeys, setExpandedNodesKeys] = useState<string[]>([]);
   const [loadingNodesKeys, setLoadingNodesKeys] = useState<string[]>([]);
+  const [loadingInitialData, setLoadingInitialData] = useState<boolean>(true);
+
+  useEffect(() => {
+    getChildren("0").then((items) => {
+      setLoadingInitialData(false);
+      setTreeData(items as TreeNode[]);
+    });
+  }, []);
 
   const handleExpand = (expandedNode: TreeNode): void => {
-    const { key, children } = expandedNode;
-    if (isUndefined(children)) return;
+    const { key, children, hasChildren } = expandedNode;
 
-    if (isNull(children)) {
+    if (!hasChildren && isUndefined(children)) return;
+
+    if (hasChildren && isUndefined(children)) {
       setLoadingNodesKeys(loadingNodesKeys.concat(key));
-      new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve([
-            {
-              label: "Lemon",
-              key: "1-0-0-0",
-              type: "doc",
-            },
-            {
-              label: "Peach",
-              key: "1-2-3",
-              type: "doc",
-            },
-          ]);
-        }, 1000);
-      }).then((children) => {
-        setTreeData((currentData) => {
-          return updateTreeData(currentData, key, children as TreeNode[]);
-        });
+      getChildren(key).then((children) => {
         setLoadingNodesKeys(
           loadingNodesKeys.filter((curKey) => curKey !== key)
         );
-        setExpandedNodesKeys(expandedNodesKeys.concat(key));
+        let updateObj: { hasChildren?: boolean; children?: TreeNode[] };
+        if (children && (children as TreeNode[]).length === 0) {
+          updateObj = { hasChildren: false };
+        } else {
+          updateObj = { children: children as TreeNode[] };
+        }
+        setTreeData((currentData) => {
+          return updateTreeData(currentData, key, updateObj);
+        });
+        /**
+         * -- TODO ---
+         * The tree data needs to be set prior to adding the item key to the expandedNodesKeys state,
+         * So that the animation of the Collapse component will happen, that's why as a workaround
+         * I write the setExpandedNodesKeys in setTimeout, so that this callback will enter the queue.
+         */
+        setTimeout(() => {
+          setExpandedNodesKeys(expandedNodesKeys.concat(key));
+        }, 0);
       });
     } else {
       setExpandedNodesKeys(
@@ -120,23 +138,31 @@ function App() {
         <ListItemAvatar>
           <StyledAvatar type={item.type}>{icons[item.type]}</StyledAvatar>
         </ListItemAvatar>
-        <ListItemText primary={item.label} secondary="Jan 9, 2014" />
+        <ListItemText primary={item.label} secondary={item.type} />
       </StyledListItem>
     );
   };
 
   return (
     <StyledApp>
-      <StyledDiv>
-        <Tree
-          data={treeData}
-          renderTreeListItem={renderTreeListItem}
-          expandedNodesKeys={expandedNodesKeys}
-          loadingNodesKeys={loadingNodesKeys}
-          onExpand={handleExpand}
-          onItemClick={handleItemClick}
-        />
-      </StyledDiv>
+      <StyledTreeContainer>
+        {loadingInitialData ? (
+          <StyledSpinnerBoxContainer>
+            <Box sx={{ p: 0.2 }}>
+              <CircularProgress size="2rem" color="inherit" />
+            </Box>
+          </StyledSpinnerBoxContainer>
+        ) : (
+          <Tree
+            data={treeData}
+            loadingNodesKeys={loadingNodesKeys}
+            expandedNodesKeys={expandedNodesKeys}
+            onExpand={handleExpand}
+            onItemClick={handleItemClick}
+            renderTreeListItem={renderTreeListItem}
+          />
+        )}
+      </StyledTreeContainer>
     </StyledApp>
   );
 }

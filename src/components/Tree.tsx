@@ -15,7 +15,6 @@ export interface ITreeProps {
   //   collapsibleProps: ;
   expandedNodesKeys: string[];
   loadingNodesKeys: string[];
-  //   onAsyncNodeClick: ;
   onExpand: (expandedNode: TreeNode) => void;
   onItemClick: (item: TreeNode) => void;
   renderTreeListItem: (item: TreeNode, path: string[]) => any;
@@ -44,12 +43,11 @@ const Tree = ({
               path={path.concat(`${index}`)}
               hierarchyIndex={hierarchyIndex}
               isExpanded={isExpanded}
-              onExpand={onExpand}
               isLoading={isLoading}
               onItemClick={onItemClick}
               renderTreeListItem={renderTreeListItem}
             />
-            {item.children && (
+            {item.children && item.children.length > 0 && (
               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                 <Tree
                   data={item.children}

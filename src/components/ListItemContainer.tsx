@@ -14,7 +14,6 @@ export interface IListItemContainerProps {
   hierarchyIndex: number;
   isExpanded: boolean;
   isLoading: boolean;
-  onExpand: (expandedNode: TreeNode) => void;
   onItemClick: (item: TreeNode) => void;
   renderTreeListItem: (item: TreeNode, path: Array<string>) => any;
 }
@@ -24,7 +23,6 @@ export function ListItemContainer({
   path,
   hierarchyIndex,
   isExpanded,
-  onExpand,
   isLoading,
   onItemClick,
   renderTreeListItem,
@@ -32,11 +30,11 @@ export function ListItemContainer({
   const renderIcon = () => {
     if (isLoading)
       return (
-        <Box sx={{ p: 0.2}}>
+        <Box sx={{ p: 0.2 }}>
           <CircularProgress size="1.2rem" color="inherit" />
         </Box>
       );
-    return !isUndefined(item.children) ? (
+    return item.hasChildren ? (
       isExpanded ? (
         <ExpandLess />
       ) : (
@@ -48,6 +46,7 @@ export function ListItemContainer({
   return (
     <ListItemButton
       sx={{
+        // Change to styled components
         pl: hierarchyIndex * 4,
         display: "flex",
         justifyContent: "space-between",

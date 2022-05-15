@@ -8,4 +8,5 @@ export interface TreeNode {
   key: string;
   type: keyof IColors;
   children?: TreeNode[] | null;
+  hasChildren: boolean;
 }
